@@ -169,11 +169,11 @@ var _ = {};
   //   var sum = _.reduce(numbers, function(total, number){
   //     return total + number;
   //   }, 0); // should be 6
-  _.reduce = function(collection, iterator, accumulator) {
-    if(accumulator===undefined || accumulator === null){accumulator=0;}
-    var memo = accumulator
+  _.reduce = function(collection, iterator, initialValue) {
+    if(initialValue===undefined || initialValue === null){initialValue=0;}
+    var memo = initialValue;
     _.each(collection, function(el, key, list){
-      memo = iterator(accumulator, el);
+      memo = iterator(memo, el);
     });
     return memo;
   };
@@ -194,12 +194,28 @@ var _ = {};
   // Determine whether all of the elements match a truth test.
   _.every = function(collection, iterator) {
     // TIP: Try re-using reduce() here.
+     var result = true;
+    if(iterator===undefined || iterator===null){return true;}
+    _.each(collection, function(el, key, list){
+      if(result){
+        if(iterator.call(result,el) != true){
+          result = false;
+        }
+      }
+    });
+    return result;
   };
 
   // Determine whether any of the elements pass a truth test. If no iterator is
   // provided, provide a default one
   _.some = function(collection, iterator) {
     // TIP: There's a very clever way to re-use every() here.
+      var result = false;
+      if (iterator===null || iterator===undefined){iterator = function(v){return v;}}
+        _.each(collection, function(el, key, list){
+        if(iterator(el, key, list)){result=true;}
+      });
+      return result;
   };
 
 
@@ -222,11 +238,28 @@ var _ = {};
   //     bla: "even more stuff"
   //   }); // obj1 now contains key1, key2, key3 and bla
   _.extend = function(obj) {
-  };
+    _.each(Array.prototype.slice.call(arguments, 1), function(args) {
 
+        for (var prop in args) {
+          obj[prop] = args[prop];
+        }
+      
+    });
+    return obj;
+  };
   // Like extend, but doesn't ever overwrite a key that already
   // exists in obj
   _.defaults = function(obj) {
+    _.each(Array.prototype.slice.call(arguments, 1), function(args) {
+      
+        for (var prop in args) {
+          if(obj.hasOwnProperty(prop)===false){
+            obj[prop] = args[prop];
+          }
+        }
+      
+    });
+    return obj;
   };
 
 
@@ -267,7 +300,14 @@ var _ = {};
   // _.memoize should return a function that when called, will check if it has
   // already computed the result for the given argument and return that value
   // instead if possible.
-  _.memoize = function(func) {
+   _.memoize = function(func) {
+    var reference = {};
+    return function(v){
+      if(reference[v]===undefined){
+        reference[v]=func(v);
+        return reference[v];
+      }else return reference[v];
+    }
   };
 
   // Delays a function for the given number of milliseconds, and then calls
@@ -276,7 +316,9 @@ var _ = {};
   // The arguments for the original function are passed after the wait
   // parameter. For example _.delay(someFunction, 500, 'a', 'b') will
   // call someFunction('a', 'b') after 500ms
-  _.delay = function(func, wait) {
+ _.delay = function(func, wait) {
+    var args = Array.prototype.slice.call(arguments, 2);
+    return setTimeout(function(){return func.apply(null, args)}, wait);
   };
 
 
@@ -291,6 +333,13 @@ var _ = {};
   // input array. For a tip on how to make a copy of an array, see:
   // http://mdn.io/Array.prototype.slice
   _.shuffle = function(array) {
+    var shuffled = [];
+    _.each(array, function(value, index, list) {
+      var rand = Math.floor(Math.random() * (index + 1));
+      shuffled[index] = shuffled[rand];
+      shuffled[rand] = value;
+    });
+    return shuffled;
   };
 
 
@@ -324,12 +373,24 @@ var _ = {};
 
   // Takes an arbitrary number of arrays and produces an array that contains
   // every item shared between all the passed-in arrays.
-  _.intersection = function() {
+  _.intersection = function(array) {
+    var otherArgs = Array.prototype.slice.call(arguments,1);
+    return _.filter(_.uniq(array), function(el) {
+      return _.every(otherArgs, function(eachArg) {
+        return _.contains(eachArg, el);
+      })
+    })
   };
 
   // Take the difference between one array and a number of other arrays.
   // Only the elements present in just the first array will remain.
   _.difference = function(array) {
+    var otherArgs = Array.prototype.slice.call(arguments,1);
+    return _.filter(_.uniq(array), function(el) {
+      return _.every(otherArgs, function(eachArg) {
+        return !_.contains(eachArg, el);
+      })
+    })
   };
 
 
