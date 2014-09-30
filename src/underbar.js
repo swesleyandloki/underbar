@@ -169,10 +169,9 @@ var _ = {};
   //   var sum = _.reduce(numbers, function(total, number){
   //     return total + number;
   //   }, 0); // should be 6
-  _.reduce = function(collection, iterator, initialValue) {
-    if(initialValue===undefined || initialValue === null){initialValue=0;}
-    var memo = initialValue;
+  _.reduce = function(collection, iterator, memo) {
     _.each(collection, function(el, key, list){
+      if (memo===undefined){memo=el;}
       memo = iterator(memo, el);
     });
     return memo;
@@ -194,17 +193,19 @@ var _ = {};
   // Determine whether all of the elements match a truth test.
   _.every = function(collection, iterator) {
     // TIP: Try re-using reduce() here.
-     var result = true;
+    var result = true;
     if(iterator===undefined || iterator===null){return true;}
     _.each(collection, function(el, key, list){
       if(result){
-        if(iterator.call(result,el) != true){
+        if(!iterator(el,key,list)){
           result = false;
         }
       }
     });
     return result;
   };
+
+
 
   // Determine whether any of the elements pass a truth test. If no iterator is
   // provided, provide a default one
